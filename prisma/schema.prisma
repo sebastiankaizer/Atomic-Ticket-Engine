@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Event {
+  id        Int      @id @default(autoincrement())
+  name      String
+  seats     Seat[]
+  createdAt DateTime @default(now())
+}
+
+model Seat {
+  id        Int      @id @default(autoincrement())
+  seatNo    String
+  eventId   Int
+  status    SeatStatus @default(AVAILABLE)
+  version   Int      @default(0) // KUNCI UTAMA: Optimistic Lock Version
+  event     Event    @relation(fields: [eventId], references: [id])
+  booking   Booking?
+  
+  @@unique([eventId, seatNo])
+}
+
+model Booking {
+  id        Int      @id @default(autoincrement())
+  seatId    Int      @unique
+  userEmail String
+  seat      Seat     @relation(fields: [seatId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+enum SeatStatus {
+  AVAILABLE
+  BOOKED
+}
